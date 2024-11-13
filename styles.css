@@ -1,31 +1,119 @@
 .model-selector {
   display: flex;
+  /* min-height: 100%; */
+  flex-direction: column;
+  gap: 0.25rem;
+  justify-content: center;
   align-items: center;
-  margin-right: 8px;
   position: absolute;
   left: calc(100% + 16px);
 }
 
+.model-selector.space-bottom {
+  bottom: -8px;
+}
+
+div.backdrop-blur-sm ~ div .model-selector.space-bottom {
+  left: calc(100% + 32px);
+}
+
+.model-selector > .inner-container {
+  position: relative;
+}
+
+.model-selector > .inner-container.hidden {
+  display: none;
+}
+
+.model-selector > .inner-container::after {
+  content: "";
+  background-image: url("data:image/svg+xml,%3Csvg%20viewBox%3D%220%20-4.5%2020%2020%22%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20fill%3D%22%23e8e8e3%22%20stroke%3D%22%23e8e8e3%22%3E%3Cg%20id%3D%22SVGRepo_bgCarrier%22%20stroke-width%3D%220%22%3E%3C%2Fg%3E%3Cg%20id%3D%22SVGRepo_tracerCarrier%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3C%2Fg%3E%3Cg%20id%3D%22SVGRepo_iconCarrier%22%3E%20%3Ctitle%3Earrow_down%20%5B%23e8e8e3%5D%3C%2Ftitle%3E%20%3Cdesc%3ECreated%20with%20Sketch.%3C%2Fdesc%3E%20%3Cdefs%3E%20%3C%2Fdefs%3E%20%3Cg%20id%3D%22Page-1%22%20stroke%3D%22none%22%20stroke-width%3D%221%22%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%20%3Cg%20id%3D%22Dribbble-Light-Preview%22%20transform%3D%22translate(-220.000000%2C%20-6684.000000)%22%20fill%3D%22%23e8e8e3%22%3E%20%3Cg%20id%3D%22icons%22%20transform%3D%22translate(56.000000%2C%20160.000000)%22%3E%20%3Cpath%20d%3D%22M164.292308%2C6524.36583%20L164.292308%2C6524.36583%20C163.902564%2C6524.77071%20163.902564%2C6525.42619%20164.292308%2C6525.83004%20L172.555873%2C6534.39267%20C173.33636%2C6535.20244%20174.602528%2C6535.20244%20175.383014%2C6534.39267%20L183.70754%2C6525.76791%20C184.093286%2C6525.36716%20184.098283%2C6524.71997%20183.717533%2C6524.31405%20C183.328789%2C6523.89985%20182.68821%2C6523.89467%20182.29347%2C6524.30266%20L174.676479%2C6532.19636%20C174.285736%2C6532.60124%20173.653152%2C6532.60124%20173.262409%2C6532.19636%20L165.705379%2C6524.36583%20C165.315635%2C6523.96094%20164.683051%2C6523.96094%20164.292308%2C6524.36583%22%20id%3D%22arrow_down-%5B%23e8e8e3%5D%22%3E%20%3C%2Fpath%3E%20%3C%2Fg%3E%20%3C%2Fg%3E%20%3C%2Fg%3E%20%3C%2Fg%3E%3C%2Fsvg%3E");
+  width: 0.75rem;
+  height: 0.75rem;
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%) rotate(0deg);
+  pointer-events: none;
+  transition: transform 0.2s ease-out;
+}
+
+.model-selector > .inner-container.active::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
 .model-selector select {
   appearance: none;
-  background-color: var(--bg-background, white);
-  border: 1px solid var(--border-main, #e5e7eb);
+  /* Using pale-cyan-100 for a lighter background that stands out */
+  background-color: oklch(var(--dark-background-color-200));
+  /* Using a more visible border */
+  border: 1px solid oklch(var(--pale-blue-200));
   border-radius: 8px;
   padding: 8px 32px 8px 12px;
   font-size: 14px;
-  color: var(--text-main, #1f2937);
+  /* Using pale-yellow-300 for better text contrast */
+  color: oklch(var(--pale-yellow-300));
   cursor: pointer;
-  min-width: 160px;
+  width: 100%;
+  min-width: 12rem;
+  transition: transform 0.2s ease-out;
 }
 
-.model-selector::after {
-  content: "";
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 4px solid currentColor;
-  pointer-events: none;
+.model-selector select:hover {
+  background-color: oklch(var(--pale-cyan-200));
+  border-color: oklch(var(--dark-background-color-300));
 }
+
+.model-selector select:focus {
+  outline: none;
+  border-color: oklch(var(--teal-100));
+}
+
+/* Perplexity colors */
+/* :root {
+  --pale-yellow-100: 99% 0.004 106.471;
+  --pale-yellow-200: 96.3% 0.007 106.523;
+  --pale-yellow-300: 93% 0.007 106.529;
+  --pale-yellow-400: 93% 0.003 106.451;
+  --pale-yellow-500: 90.6% 0.005 106.506;
+  --pale-yellow-600: 88.3% 0.012 106.646;
+  --pale-yellow-700: 50.2% 0.008 106.677;
+  --pale-yellow-800: 35.9% 0.003 106.569;
+  --pale-teal-100: 92.1% 0.009 171.782;
+  --pale-cyan-100: 65.3% 0.005 197.042;
+  --pale-cyan-200: 30.3% 0.003 197.007;
+  --pale-cyan-300: 25% 0.003 196.966;
+  --pale-cyan-400: 21.7% 0.002 197.042;
+  --pale-blue-100: 36.6% 0.003 228.866;
+  --pale-blue-200: 30.4% 0.04 213.681;
+  --teal-100: 71.9% 0.119 209.76;
+  --teal-200: 55.3% 0.086 208.538;
+  --rose-100: 68.2% 0.207 22.935;
+  --red-100: 53.5% 0.151 25.991;
+  --persimmon-100: 52.8% 0.13 37.369;
+  --background-color-100: var(--pale-yellow-100);
+  --background-color-200: var(--pale-yellow-200);
+  --background-color-300: var(--pale-yellow-300);
+  --background-super-color-100: var(--pale-teal-100);
+  --background-super-color-200: var(--teal-200);
+  --background-super-color-300: var(--teal-100);
+  --background-super-alt-color-100: var(--persimmon-100);
+  --background-back-to-school-orange-color: 252 96 2;
+  --border-color-100: var(--pale-yellow-600);
+  --text-color-100: var(--pale-blue-200);
+  --text-color-200: var(--pale-yellow-700);
+  --dark-background-color-100: var(--pale-cyan-400);
+  --dark-background-color-200: var(--pale-cyan-300);
+  --dark-background-color-300: var(--pale-cyan-200);
+  --dark-background-super-color-100: var(--pale-blue-200);
+  --dark-background-super-color-200: var(--teal-100);
+  --dark-background-super-color-300: var(--teal-200);
+  --dark-background-super-alt-color-100: var(--red-100);
+  --dark-border-color-100: var(--pale-blue-100);
+  --dark-text-color-100: var(--pale-yellow-400);
+  --dark-text-color-200: var(--pale-cyan-100);
+  --light-background-color-100: var(--pale-yellow-100);
+  --light-text-color-100: var(--pale-blue-200);
+  --backdrop-color-100: 0 0 360;
+  --backdrop-lightbox-color-100: 0 0 360;
+} */

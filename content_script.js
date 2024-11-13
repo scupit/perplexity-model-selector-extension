@@ -1,6 +1,6 @@
 class ModelSelector {
   constructor() {
-    this.models = [
+    this.responseModels = [
       { title: "Default", value: "turbo" },
       { title: "Claude 3.5 Sonnet", value: "claude2" },
       { title: "Sonar Large", value: "experimental" },
@@ -10,24 +10,48 @@ class ModelSelector {
       { title: "Claude 3.5 Haiku", value: "claude35haiku" },
     ];
 
-    this.selectors = [
-      "div.items-center.grid-rows-1fr-auto.grid.grid-cols-3.w-full div.bg-background.dark\\:bg-offsetDark.flex.items-center.space-x-2.justify-self-end.rounded-full.col-start-3.row-start-2.-mr-2",
-      "div.items-center.flex.w-full div.bg-background.dark\\:bg-offsetDark.flex.items-center.space-x-2.justify-self-end.rounded-full.order-2",
-      "div.fixed.bottom-0.left-0.right-0.top-0.overflow-y-auto div.items-center.grid-rows-1fr-auto.grid.grid-cols-3.w-full div.bg-background.dark\\:bg-offsetDark.flex.items-center.space-x-2.justify-self-end.rounded-full.col-start-3.row-start-2.-mr-2",
+    this.imageModels = [
+      { title: "Playground v3", value: "default" },
+      { title: "DALL-E 3", value: "dall-e-3" },
+      { title: "Stable Diffusion XL", value: "sdxl" },
+      { title: "FLUX.1", value: "flux" },
     ];
 
-    this.currentModel = null;
+    this.selectors = [
+      // Main bar and "new thread" bar. Apparently they just duplicate the element.
+      {
+        selector:
+          "div.items-center.grid-rows-1fr-auto.grid.grid-cols-3.w-full div.bg-background.dark\\:bg-offsetDark.flex.items-center.space-x-2.justify-self-end.rounded-full.col-start-3.row-start-2.-mr-2",
+        shouldShowResponseModels: true,
+        shouldShowImageModels: true,
+        additionalClasses: ["space-bottom"],
+      },
+      // Bar for additional responses and follow-up questions.
+      {
+        selector:
+          "div.items-center.flex.w-full div.bg-background.dark\\:bg-offsetDark.flex.items-center.space-x-2.justify-self-end.rounded-full.order-2",
+        // Changing response model has no effect in follow-ups. This has to be done through
+        // the "rewrite" button. This is bad design on their part.
+        shouldShowResponseModels: false,
+        shouldShowImageModels: true,
+        additionalClasses: [],
+      },
+    ];
+
+    this.currentResponseModel = null;
+    this.currentImageModel = null;
     this.observer = null;
     this.initialized = false;
 
-    // Initialize the extension
     this.init();
   }
 
   async init() {
     try {
-      // Get the initial model setting before injecting dropdowns
-      await this.getCurrentModel();
+      await Promise.all([
+        this.getCurrentModel("default_model"),
+        this.getCurrentModel("default_image_generation_model"),
+      ]);
       this.initialized = true;
       this.initObserver();
       this.injectDropdowns();
@@ -36,30 +60,50 @@ class ModelSelector {
     }
   }
 
-  createDropdown() {
-    const container = document.createElement("div");
-    container.className = "model-selector";
+  createDropdown(models, currentValue, isHidden, onChange) {
+    const container = document.createElement("span");
+    container.classList.add("inner-container");
+
+    if (isHidden) {
+      container.classList.add("hidden");
+    }
 
     const select = document.createElement("select");
-    select.innerHTML = this.models
+
+    select.innerHTML = models
       .map((model) => `<option value="${model.value}">${model.title}</option>`)
       .join("");
 
-    // Set the current model value
-    if (this.currentModel) {
-      select.value = this.currentModel;
+    if (currentValue) {
+      select.value = currentValue;
     }
 
     select.addEventListener("change", async (e) => {
-      e.preventDefault();
-      await this.handleModelChange(e.target.value);
+      await onChange(e.target.value);
+    });
+
+    select.addEventListener("click", () => {
+      if (container.classList.contains("active")) {
+        container.classList.remove("active");
+      } else {
+        container.classList.add("active");
+      }
+    });
+
+    select.addEventListener("blur", () => {
+      container.classList.remove("active");
     });
 
     container.appendChild(select);
     return container;
   }
 
-  async handleModelChange(modelValue) {
+  async handleModelChange(modelValue, modelType) {
+    console.log(`Changing ${modelType} model to ${modelValue}`);
+    const settingKey =
+      modelType === "response"
+        ? "default_model"
+        : "default_image_generation_model";
     try {
       const requestOptions = {
         method: "PUT",
@@ -69,7 +113,7 @@ class ModelSelector {
         },
         body: JSON.stringify({
           updated_settings: {
-            default_model: modelValue,
+            [settingKey]: modelValue,
           },
         }),
         credentials: "include",
@@ -86,35 +130,76 @@ class ModelSelector {
 
       await response.json();
 
-      // Update the current model and sync all dropdowns
-      this.currentModel = modelValue;
+      if (modelType === "response") {
+        this.currentResponseModel = modelValue;
+      } else {
+        this.currentImageModel = modelValue;
+      }
+
       this.syncDropdowns();
+      // window.location.reload();
     } catch (error) {
       console.error("Error updating model:", error);
-      // Revert all dropdowns to the previous value
       this.syncDropdowns();
     }
   }
 
   syncDropdowns() {
-    if (!this.currentModel) return;
-
-    const dropdowns = document.querySelectorAll(".model-selector select");
-    dropdowns.forEach((dropdown) => {
-      dropdown.value = this.currentModel;
+    const containers = document.querySelectorAll(".model-selector");
+    containers.forEach((container) => {
+      const [responseSelect, imageSelect] =
+        container.querySelectorAll("select");
+      if (this.currentResponseModel && responseSelect) {
+        responseSelect.value = this.currentResponseModel;
+      }
+      if (this.currentImageModel && imageSelect) {
+        imageSelect.value = this.currentImageModel;
+      }
     });
   }
 
   injectDropdowns() {
-    this.selectors.forEach((selector) => {
-      const elements = document.querySelectorAll(selector);
-      elements.forEach((element) => {
-        if (!element.querySelector(".model-selector")) {
-          element.style.position = "relative"
-          element.appendChild(this.createDropdown());
-        }
-      });
-    });
+    this.selectors.forEach(
+      ({
+        selector,
+        shouldShowImageModels,
+        shouldShowResponseModels,
+        additionalClasses,
+      }) => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach((element) => {
+          if (!element.querySelector(".model-selector")) {
+            const container = document.createElement("div");
+            container.classList.add("model-selector");
+
+            for (const className of additionalClasses) {
+              container.classList.add(className);
+            }
+
+            container.appendChild(
+              this.createDropdown(
+                this.responseModels,
+                this.currentResponseModel,
+                !shouldShowResponseModels,
+                (value) => this.handleModelChange(value, "response")
+              )
+            );
+
+            container.appendChild(
+              this.createDropdown(
+                this.imageModels,
+                this.currentImageModel,
+                !shouldShowImageModels,
+                (value) => this.handleModelChange(value, "image")
+              )
+            );
+
+            element.style.position = "relative";
+            element.appendChild(container);
+          }
+        });
+      }
+    );
   }
 
   initObserver() {
@@ -132,7 +217,7 @@ class ModelSelector {
     });
   }
 
-  async getCurrentModel() {
+  async getCurrentModel(settingKey) {
     try {
       const response = await fetch(
         "https://www.perplexity.ai/rest/user/settings?version=2.13&source=default",
@@ -149,17 +234,20 @@ class ModelSelector {
       }
 
       const data = await response.json();
-      if (data?.default_model) {
-        this.currentModel = data.default_model;
+      if (data?.[settingKey]) {
+        if (settingKey === "default_model") {
+          this.currentResponseModel = data[settingKey];
+        } else {
+          this.currentImageModel = data[settingKey];
+        }
       }
     } catch (error) {
-      console.error("Error fetching current model:", error);
-      throw error; // Re-throw to handle in init()
+      console.error(`Error fetching ${settingKey}:`, error);
+      throw error;
     }
   }
 }
 
-// Initialize when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => new ModelSelector(), 500);
 });
