@@ -1,3 +1,5 @@
+const ACTIVE_DROPDOWN_CLASS = "active";
+
 /**
  * This helps differentiate between search box types. For example, we shouldn't show the
  * general AI model selector when on a running thread because changing the model from there
@@ -140,7 +142,7 @@ class ModelSelector {
      *
      * @type {boolean}
      */
-    this.initialized = false;
+    this.areSettingsInitialized = false;
 
     this.init();
   }
@@ -156,7 +158,7 @@ class ModelSelector {
       const { generalModel, imageModel } = await this.getCurrentSettings();
       this.currentResponseModel = generalModel;
       this.currentImageModel = imageModel;
-      this.initialized = true;
+      this.areSettingsInitialized = true;
       this.initObserver();
       this.injectDropdowns();
     } catch (error) {
@@ -183,10 +185,10 @@ class ModelSelector {
     }
 
     const select = document.createElement("select");
-    for (const model of models) {
+    for (const { value, title } of models) {
       const option = document.createElement("option");
-      option.value = model.value;
-      option.textContent = model.title;
+      option.value = value;
+      option.textContent = title;
       select.appendChild(option);
     }
 
@@ -199,15 +201,15 @@ class ModelSelector {
     });
 
     select.addEventListener("click", () => {
-      if (container.classList.contains("active")) {
-        container.classList.remove("active");
+      if (container.classList.contains(ACTIVE_DROPDOWN_CLASS)) {
+        container.classList.remove(ACTIVE_DROPDOWN_CLASS);
       } else {
-        container.classList.add("active");
+        container.classList.add(ACTIVE_DROPDOWN_CLASS);
       }
     });
 
     select.addEventListener("blur", () => {
-      container.classList.remove("active");
+      container.classList.remove(ACTIVE_DROPDOWN_CLASS);
     });
 
     container.appendChild(select);
@@ -229,23 +231,21 @@ class ModelSelector {
         ? "default_model"
         : "default_image_generation_model";
     try {
-      const requestOptions = {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          updated_settings: {
-            [settingKey]: modelValue,
-          },
-        }),
-        credentials: "include",
-      };
-
       const response = await fetch(
         "https://www.perplexity.ai/rest/user/save-settings?version=2.13&source=default",
-        requestOptions
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            updated_settings: {
+              [settingKey]: modelValue,
+            },
+          }),
+          credentials: "include",
+        }
       );
 
       if (!response.ok) {
@@ -340,7 +340,7 @@ class ModelSelector {
   initObserver() {
     this.observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.addedNodes.length && this.initialized) {
+        if (mutation.addedNodes.length && this.areSettingsInitialized) {
           this.injectDropdowns();
         }
       });
