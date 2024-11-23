@@ -1,3 +1,37 @@
+function isSearchPage() {
+  const url = new URL(window.location.href);
+  const sections = url.pathname.slice(1).split("/");
+  return sections[0] === "search";
+}
+
+function checkIsHidden(isHidden) {
+  const type = typeof isHidden;
+  switch (type) {
+    case "boolean":
+      return isHidden;
+    case "function":
+      return isHidden();
+    default:
+      throw new TypeError(
+        `Invalid type "${type}" passed to checkIsHidden(...).`
+      );
+  }
+}
+
+function resolveAdditionalClasses(additionalClasses) {
+  if (Array.isArray(additionalClasses)) {
+    return additionalClasses;
+  }
+
+  if (typeof additionalClasses !== "function") {
+    throw new TypeError(
+      `Invalid type ${typeof additionalClasses} passed to resolveAdditionalClasses(...).`
+    );
+  }
+
+  return additionalClasses();
+}
+
 class ModelSelector {
   constructor() {
     this.responseModels = [
@@ -18,23 +52,28 @@ class ModelSelector {
     ];
 
     this.selectors = [
-      // Main bar and "new thread" bar. Apparently they just duplicate the element.
+      // Main bar in both the homepage and search page.
+      {
+        selector: "main span.grow.block > div > div > div > div:last-of-type",
+        // This has to be a function so that it runs each time the selector is evaluated,
+        // not just when this list is initialized.
+        shouldShowResponseModels: () => !isSearchPage(),
+        shouldShowImageModels: true,
+        additionalClasses: () => {
+          const result = [];
+          if (!isSearchPage()) {
+            result.push("space-bottom");
+          }
+          return result;
+        },
+      },
+      // "New Thread" bar
       {
         selector:
-          "div.items-center.grid-rows-1fr-auto.grid.grid-cols-3.w-full div.bg-background.dark\\:bg-offsetDark.flex.items-center.space-x-2.justify-self-end.rounded-full.col-start-3.row-start-2.-mr-2",
+          "body > div:last-of-type span.grow.block > div > div > div > div:last-of-type",
         shouldShowResponseModels: true,
         shouldShowImageModels: true,
         additionalClasses: ["space-bottom"],
-      },
-      // Bar for additional responses and follow-up questions.
-      {
-        selector:
-          "div.items-center.flex.w-full div.bg-background.dark\\:bg-offsetDark.flex.items-center.space-x-2.justify-self-end.rounded-full.order-2",
-        // Changing response model has no effect in follow-ups. This has to be done through
-        // the "rewrite" button. This is bad design on their part.
-        shouldShowResponseModels: false,
-        shouldShowImageModels: true,
-        additionalClasses: [],
       },
     ];
 
@@ -69,10 +108,12 @@ class ModelSelector {
     }
 
     const select = document.createElement("select");
-
-    select.innerHTML = models
-      .map((model) => `<option value="${model.value}">${model.title}</option>`)
-      .join("");
+    for (const model of models) {
+      const option = document.createElement("option");
+      option.value = model.value;
+      option.textContent = model.title;
+      select.appendChild(option);
+    }
 
     if (currentValue) {
       select.value = currentValue;
@@ -172,7 +213,9 @@ class ModelSelector {
             const container = document.createElement("div");
             container.classList.add("model-selector");
 
-            for (const className of additionalClasses) {
+            for (const className of resolveAdditionalClasses(
+              additionalClasses
+            )) {
               container.classList.add(className);
             }
 
@@ -180,7 +223,7 @@ class ModelSelector {
               this.createDropdown(
                 this.responseModels,
                 this.currentResponseModel,
-                !shouldShowResponseModels,
+                !checkIsHidden(shouldShowResponseModels),
                 (value) => this.handleModelChange(value, "response")
               )
             );
@@ -189,7 +232,7 @@ class ModelSelector {
               this.createDropdown(
                 this.imageModels,
                 this.currentImageModel,
-                !shouldShowImageModels,
+                !checkIsHidden(shouldShowImageModels),
                 (value) => this.handleModelChange(value, "image")
               )
             );
