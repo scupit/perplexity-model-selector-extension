@@ -5,7 +5,7 @@
  *
  * @returns {boolean} True if the current page is a search page.
  */
-function onSearchPage() {
+function currentlyOnSearchPage() {
   const url = new URL(window.location.href);
   const sections = url.pathname.slice(1).split("/");
   return sections[0] === "search";
@@ -96,11 +96,11 @@ class ModelSelector {
         selector: "main span.grow.block > div > div > div > div:last-of-type",
         // This has to be a function so that it runs each time the selector is evaluated,
         // not just when this list is initialized.
-        shouldShowResponseModels: () => !onSearchPage(),
+        shouldShowResponseModels: () => !currentlyOnSearchPage(),
         shouldShowImageModels: true,
         additionalClasses: () => {
           const result = [];
-          if (!onSearchPage()) {
+          if (!currentlyOnSearchPage()) {
             result.push("space-bottom");
           }
           return result;
@@ -153,10 +153,9 @@ class ModelSelector {
    */
   async init() {
     try {
-      await Promise.all([
-        this.getCurrentModel("default_model"),
-        this.getCurrentModel("default_image_generation_model"),
-      ]);
+      const { generalModel, imageModel } = await this.getCurrentSettings();
+      this.currentResponseModel = generalModel;
+      this.currentImageModel = imageModel;
       this.initialized = true;
       this.initObserver();
       this.injectDropdowns();
@@ -357,11 +356,13 @@ class ModelSelector {
    * Fetches the current model setting from the server.
    *
    * @async
-   * @param {string} settingKey - The key of the setting to fetch.
-   * @returns {Promise<void>}
+   * @returns {Promise<{
+   *    generalModel: string,
+   *    imageModel: string
+   * }>}
    * @throws {Error} If the fetch operation fails.
    */
-  async getCurrentModel(settingKey) {
+  async getCurrentSettings() {
     try {
       const response = await fetch(
         "https://www.perplexity.ai/rest/user/settings?version=2.13&source=default",
@@ -378,15 +379,12 @@ class ModelSelector {
       }
 
       const data = await response.json();
-      if (data?.[settingKey]) {
-        if (settingKey === "default_model") {
-          this.currentResponseModel = data[settingKey];
-        } else {
-          this.currentImageModel = data[settingKey];
-        }
-      }
+      return {
+        generalModel: data.default_model,
+        imageModel: data.default_image_generation_model,
+      };
     } catch (error) {
-      console.error(`Error fetching ${settingKey}:`, error);
+      console.error(`Error fetching current settings:`, error);
       throw error;
     }
   }
