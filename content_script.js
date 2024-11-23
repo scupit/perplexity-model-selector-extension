@@ -1,16 +1,30 @@
-function isSearchPage() {
+/**
+ * This helps differentiate between search box types. For example, we shouldn't show the
+ * general AI model selector when on a running thread because changing the model from there
+ * won't have any effect.
+ *
+ * @returns {boolean} True if the current page is a search page.
+ */
+function onSearchPage() {
   const url = new URL(window.location.href);
   const sections = url.pathname.slice(1).split("/");
   return sections[0] === "search";
 }
 
-function checkIsHidden(isHidden) {
-  const type = typeof isHidden;
+/**
+ * Used to determine whether a dropdown should be hidden.
+ *
+ * @param {boolean|function(): boolean} shouldHide - A boolean or a function that returns a boolean.
+ * @returns {boolean} - The hidden state.
+ * @throws {TypeError} If `isHidden` is neither a boolean nor a function.
+ */
+function checkShouldHide(shouldHide) {
+  const type = typeof shouldHide;
   switch (type) {
     case "boolean":
-      return isHidden;
+      return shouldHide;
     case "function":
-      return isHidden();
+      return shouldHide();
     default:
       throw new TypeError(
         `Invalid type "${type}" passed to checkIsHidden(...).`
@@ -18,6 +32,13 @@ function checkIsHidden(isHidden) {
   }
 }
 
+/**
+ * Used for configuration - returns a list of additional CSS classes to apply to a dropdown container.
+ *
+ * @param {string[]|function(): string[]} additionalClasses - An array of class names or a function that returns an array of class names.
+ * @returns {string[]} - The array of class names.
+ * @throws {TypeError} If `additionalClasses` is neither an array nor a function.
+ */
 function resolveAdditionalClasses(additionalClasses) {
   if (Array.isArray(additionalClasses)) {
     return additionalClasses;
@@ -34,6 +55,10 @@ function resolveAdditionalClasses(additionalClasses) {
 
 class ModelSelector {
   constructor() {
+    /**
+     * Array of available response models.
+     * @type {Array<{title: string, value: string}>}
+     */
     this.responseModels = [
       { title: "Default", value: "turbo" },
       { title: "Claude 3.5 Sonnet", value: "claude2" },
@@ -44,6 +69,10 @@ class ModelSelector {
       { title: "Claude 3.5 Haiku", value: "claude35haiku" },
     ];
 
+    /**
+     * Array of available image models.
+     * @type {Array<{title: string, value: string}>}
+     */
     this.imageModels = [
       { title: "Playground v3", value: "default" },
       { title: "DALL-E 3", value: "dall-e-3" },
@@ -51,17 +80,28 @@ class ModelSelector {
       { title: "FLUX.1", value: "flux" },
     ];
 
-    this.selectors = [
+    /**
+     * Array of selector configurations. These are used to apply specific settings to different
+     * search bars.
+     *
+     * @type {Array<{
+     *   selector: string,
+     *   shouldShowResponseModels: boolean|function(): boolean,
+     *   shouldShowImageModels: boolean|function(): boolean,
+     *   additionalClasses: string[]|function(): string[]
+     * }>}
+     */
+    this.selectorConfigs = [
       // Main bar in both the homepage and search page.
       {
         selector: "main span.grow.block > div > div > div > div:last-of-type",
         // This has to be a function so that it runs each time the selector is evaluated,
         // not just when this list is initialized.
-        shouldShowResponseModels: () => !isSearchPage(),
+        shouldShowResponseModels: () => !onSearchPage(),
         shouldShowImageModels: true,
         additionalClasses: () => {
           const result = [];
-          if (!isSearchPage()) {
+          if (!onSearchPage()) {
             result.push("space-bottom");
           }
           return result;
@@ -77,14 +117,41 @@ class ModelSelector {
       },
     ];
 
+    /**
+     * Currently selected response model value.
+     * @type {string|null}
+     */
     this.currentResponseModel = null;
+
+    /**
+     * Currently selected image model value.
+     * @type {string|null}
+     */
     this.currentImageModel = null;
+
+    /**
+     * MutationObserver instance.
+     * @type {MutationObserver|null}
+     */
     this.observer = null;
+
+    /**
+     * Indicates if the initialization (retrieving the currently selected settings and AI models)
+     * is complete.
+     *
+     * @type {boolean}
+     */
     this.initialized = false;
 
     this.init();
   }
 
+  /**
+   * Initializes the ModelSelector by fetching current models and setting up observers.
+   *
+   * @async
+   * @returns {Promise<void>}
+   */
   async init() {
     try {
       await Promise.all([
@@ -99,6 +166,16 @@ class ModelSelector {
     }
   }
 
+  /**
+   * Creates a dropdown element for selecting models. This should be reused for both the general
+   * AI model selector and the image generation model selector.
+   *
+   * @param {Array<{title: string, value: string}>} models - Array of model objects.
+   * @param {string|null} currentValue - The current selected model value.
+   * @param {boolean} isHidden - Whether the dropdown should be hidden.
+   * @param {function(string): Promise<void>} onChange - Callback function when the selected model changes.
+   * @returns {HTMLSpanElement} - The container element with the dropdown.
+   */
   createDropdown(models, currentValue, isHidden, onChange) {
     const container = document.createElement("span");
     container.classList.add("inner-container");
@@ -139,6 +216,14 @@ class ModelSelector {
     return container;
   }
 
+  /**
+   * Handles the model change event and updates the user's settings.
+   *
+   * @async
+   * @param {string} modelValue - The new model value selected.
+   * @param {"response"|"image"} modelType - The type of model being changed.
+   * @returns {Promise<void>}
+   */
   async handleModelChange(modelValue, modelType) {
     console.log(`Changing ${modelType} model to ${modelValue}`);
     const settingKey =
@@ -185,6 +270,9 @@ class ModelSelector {
     }
   }
 
+  /**
+   * Synchronizes all dropdowns with the current model selections.
+   */
   syncDropdowns() {
     const containers = document.querySelectorAll(".model-selector");
     containers.forEach((container) => {
@@ -199,8 +287,11 @@ class ModelSelector {
     });
   }
 
+  /**
+   * Injects the model selection dropdowns into the specified DOM elements.
+   */
   injectDropdowns() {
-    this.selectors.forEach(
+    this.selectorConfigs.forEach(
       ({
         selector,
         shouldShowImageModels,
@@ -223,7 +314,7 @@ class ModelSelector {
               this.createDropdown(
                 this.responseModels,
                 this.currentResponseModel,
-                !checkIsHidden(shouldShowResponseModels),
+                !checkShouldHide(shouldShowResponseModels),
                 (value) => this.handleModelChange(value, "response")
               )
             );
@@ -232,7 +323,7 @@ class ModelSelector {
               this.createDropdown(
                 this.imageModels,
                 this.currentImageModel,
-                !checkIsHidden(shouldShowImageModels),
+                !checkShouldHide(shouldShowImageModels),
                 (value) => this.handleModelChange(value, "image")
               )
             );
@@ -245,6 +336,9 @@ class ModelSelector {
     );
   }
 
+  /**
+   * Initializes a MutationObserver to watch for DOM changes and reinject dropdowns.
+   */
   initObserver() {
     this.observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
@@ -260,6 +354,14 @@ class ModelSelector {
     });
   }
 
+  /**
+   * Fetches the current model setting from the server.
+   *
+   * @async
+   * @param {string} settingKey - The key of the setting to fetch.
+   * @returns {Promise<void>}
+   * @throws {Error} If the fetch operation fails.
+   */
   async getCurrentModel(settingKey) {
     try {
       const response = await fetch(
@@ -291,6 +393,7 @@ class ModelSelector {
   }
 }
 
+// Initialize the extension.
 document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => new ModelSelector(), 500);
+  new ModelSelector();
 });
