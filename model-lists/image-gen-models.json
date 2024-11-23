@@ -8,10 +8,6 @@
     "value": "dall-e-3"
   },
   {
-    "title": "Stable Diffusion XL",
-    "value": "sdxl"
-  },
-  {
     "title": "FLUX.1",
     "value": "flux"
   }

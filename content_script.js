@@ -76,7 +76,6 @@ class ModelSelector {
     this.imageModels = [
       { title: "Playground v3", value: "default" },
       { title: "DALL-E 3", value: "dall-e-3" },
-      { title: "Stable Diffusion XL", value: "sdxl" },
       { title: "FLUX.1", value: "flux" },
     ];
 
