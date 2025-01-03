@@ -30,5 +30,9 @@
   {
     "title": "Claude 3.5 Haiku",
     "value": "claude35haiku"
+  },
+  {
+    "title": "O1",
+    "value": "o1"
   }
 ]

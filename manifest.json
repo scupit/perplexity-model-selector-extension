@@ -1,12 +1,11 @@
 {
   "manifest_version": 2,
   "name": "Perplexity Model Selector",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Injects AI model selection dropdowns into Perplexity UI",
   "permissions": [
     "*://www.perplexity.ai/*",
-    "webRequest",
-    "webRequestBlocking"
+    "webRequest"
   ],
   "content_scripts": [
     {

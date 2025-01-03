@@ -69,6 +69,7 @@ class ModelSelector {
       { title: "Sonar Huge", value: "llama_x_large" },
       { title: "Grok-2", value: "grok" },
       { title: "Claude 3.5 Haiku", value: "claude35haiku" },
+      { title: "O1", value: "o1" },
     ];
 
     /**
@@ -259,11 +260,10 @@ class ModelSelector {
       } else {
         this.currentImageModel = modelValue;
       }
-
-      this.syncDropdowns();
-      // window.location.reload();
     } catch (error) {
       console.error("Error updating model:", error);
+    }
+    finally {
       this.syncDropdowns();
     }
   }
