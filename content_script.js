@@ -64,12 +64,10 @@ class ModelSelector {
     this.responseModels = [
       { title: "Default", value: "turbo" },
       { title: "Claude 3.5 Sonnet", value: "claude2" },
-      { title: "Sonar Large", value: "experimental" },
+      { title: "Sonar", value: "experimental" },
       { title: "GPT-4o", value: "gpt4o" },
-      { title: "Sonar Huge", value: "llama_x_large" },
       { title: "Grok-2", value: "grok" },
-      { title: "Claude 3.5 Haiku", value: "claude35haiku" },
-      { title: "O1", value: "o1" },
+      { title: "Claude 3.5 Haiku", value: "claude35haiku" }
     ];
 
     /**
