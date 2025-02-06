@@ -62,12 +62,13 @@ class ModelSelector {
      * @type {Array<{title: string, value: string}>}
      */
     this.responseModels = [
-      { title: "Default", value: "turbo" },
+      { title: "Default/Auto", value: "turbo" },
       { title: "Claude 3.5 Sonnet", value: "claude2" },
       { title: "Sonar", value: "experimental" },
       { title: "GPT-4o", value: "gpt4o" },
       { title: "Grok-2", value: "grok" },
-      { title: "Claude 3.5 Haiku", value: "claude35haiku" }
+      { title: "Claude 3.5 Haiku", value: "claude35haiku" },
+      { title: "Gemini 2.0 Flash", value: "gemini2flash" }
     ];
 
     /**
@@ -260,8 +261,7 @@ class ModelSelector {
       }
     } catch (error) {
       console.error("Error updating model:", error);
-    }
-    finally {
+    } finally {
       this.syncDropdowns();
     }
   }

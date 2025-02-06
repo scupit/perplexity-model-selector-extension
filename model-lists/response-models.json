@@ -1,6 +1,6 @@
 [
   {
-    "title": "Default",
+    "title": "Default/Auto",
     "value": "turbo"
   },
   {
@@ -22,5 +22,9 @@
   {
     "title": "Claude 3.5 Haiku",
     "value": "claude35haiku"
+  },
+  {
+    "title": "Gemini 2.0 Flash",
+    "value": "gemini2flash"
   }
 ]
