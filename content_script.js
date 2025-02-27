@@ -1,4 +1,5 @@
 const ACTIVE_DROPDOWN_CLASS = "active";
+const PERPLEXITY_SETTINGS_VERSION = "2.18";
 
 /**
  * This helps differentiate between search box types. For example, we shouldn't show the
@@ -63,12 +64,12 @@ class ModelSelector {
      */
     this.responseModels = [
       { title: "Default/Auto", value: "turbo" },
-      { title: "Claude 3.5 Sonnet", value: "claude2" },
+      { title: "Claude 3.7 Sonnet", value: "claude2" },
       { title: "Sonar", value: "experimental" },
       { title: "GPT-4o", value: "gpt4o" },
       { title: "Grok-2", value: "grok" },
       { title: "Claude 3.5 Haiku", value: "claude35haiku" },
-      { title: "Gemini 2.0 Flash", value: "gemini2flash" }
+      { title: "Gemini 2.0 Flash", value: "gemini2flash" },
     ];
 
     /**
@@ -232,7 +233,7 @@ class ModelSelector {
         : "default_image_generation_model";
     try {
       const response = await fetch(
-        "https://www.perplexity.ai/rest/user/save-settings?version=2.13&source=default",
+        `https://www.perplexity.ai/rest/user/save-settings?version=${PERPLEXITY_SETTINGS_VERSION}&source=default`,
         {
           method: "PUT",
           headers: {
@@ -363,7 +364,7 @@ class ModelSelector {
   async getCurrentSettings() {
     try {
       const response = await fetch(
-        "https://www.perplexity.ai/rest/user/settings?version=2.13&source=default",
+        `https://www.perplexity.ai/rest/user/settings?version=${PERPLEXITY_SETTINGS_VERSION}&source=default`,
         {
           credentials: "include",
           headers: {
