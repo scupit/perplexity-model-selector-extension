@@ -16,6 +16,10 @@
     "value": "gpt4o"
   },
   {
+    "title": "GPT-4.5",
+    "value": "gpt45"
+  },
+  {
     "title": "Grok-2",
     "value": "grok"
   },

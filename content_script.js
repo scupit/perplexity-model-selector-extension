@@ -67,6 +67,7 @@ class ModelSelector {
       { title: "Claude 3.7 Sonnet", value: "claude2" },
       { title: "Sonar", value: "experimental" },
       { title: "GPT-4o", value: "gpt4o" },
+      { title: "GPT-4.5", value: "gpt45" },
       { title: "Grok-2", value: "grok" },
       { title: "Claude 3.5 Haiku", value: "claude35haiku" },
       { title: "Gemini 2.0 Flash", value: "gemini2flash" },
