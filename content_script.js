@@ -62,16 +62,16 @@ class ModelSelector {
      * Array of available response models.
      * @type {Array<{title: string, value: string}>}
      */
-    this.responseModels = [
-      { title: "Default/Auto", value: "turbo" },
-      { title: "Claude 3.7 Sonnet", value: "claude2" },
-      { title: "Sonar", value: "experimental" },
-      { title: "GPT-4o", value: "gpt4o" },
-      { title: "GPT-4.5", value: "gpt45" },
-      { title: "Grok-2", value: "grok" },
-      { title: "Claude 3.5 Haiku", value: "claude35haiku" },
-      { title: "Gemini 2.0 Flash", value: "gemini2flash" },
-    ];
+    // this.responseModels = [
+    //   { title: "Default/Auto", value: "turbo" },
+    //   { title: "Claude 3.7 Sonnet", value: "claude2" },
+    //   { title: "Sonar", value: "experimental" },
+    //   { title: "GPT-4o", value: "gpt4o" },
+    //   { title: "GPT-4.5", value: "gpt45" },
+    //   { title: "Grok-2", value: "grok" },
+    //   { title: "Claude 3.5 Haiku", value: "claude35haiku" },
+    //   { title: "Gemini 2.0 Flash", value: "gemini2flash" },
+    // ];
 
     /**
      * Array of available image models.
@@ -308,14 +308,14 @@ class ModelSelector {
               container.classList.add(className);
             }
 
-            container.appendChild(
-              this.createDropdown(
-                this.responseModels,
-                this.currentResponseModel,
-                !checkShouldHide(shouldShowResponseModels),
-                (value) => this.handleModelChange(value, "response")
-              )
-            );
+            // container.appendChild(
+            //   this.createDropdown(
+            //     this.responseModels,
+            //     this.currentResponseModel,
+            //     !checkShouldHide(shouldShowResponseModels),
+            //     (value) => this.handleModelChange(value, "response")
+            //   )
+            // );
 
             container.appendChild(
               this.createDropdown(
